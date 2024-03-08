@@ -10,10 +10,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static org.jembi.jempi.shared.utils.AppUtils.OBJECT_MAPPER;
 
@@ -307,28 +305,17 @@ public abstract class ApiModels {
 
    @JsonInclude(JsonInclude.Include.NON_NULL)
    public record ApiAuditTrail(
-         List<AuditEntry> entries) {
-      public static ApiAuditTrail fromAuditTrail(final List<ExpandedAuditEvent> trail) {
-         final var apiDateFormat = new SimpleDateFormat(DATE_PATTERN);
-         return new ApiAuditTrail(trail.stream()
-                                       .map(x -> new AuditEntry(apiDateFormat.format(x.event().insertedAt()),
-                                                                apiDateFormat.format(x.event().createdAt()),
-                                                                x.event().interactionID(),
-                                                                x.event().goldenID(),
-                                                                x.event().event(),
-                                               toApiModel((LinkingAuditDetails) getDeserializedEventData(x))
-                                               ))
-                                       .toList());
-      }
+         List<LinkingAuditEntry> entries) {
 
       @JsonInclude(JsonInclude.Include.NON_NULL)
-      public record AuditEntry(
+      public record LinkingAuditEntry(
             @JsonProperty("inserted_at") String insertedAt,
             @JsonProperty("created_at") String createdAt,
             @JsonProperty("interaction_id") String interactionId,
             @JsonProperty("golden_id") String goldenId,
             @JsonProperty("entry") String entry,
-            @JsonProperty("linking_rule") ApiLinkingRule linkingRule
+            @JsonProperty("score") Float score,
+            @JsonProperty("linkingRule") String linkingRule
             ) {
       }
    }
@@ -355,35 +342,4 @@ public abstract class ApiModels {
          List<ExternalLinkCandidate> externalLinkCandidateList) {
    }
 
-   public record ApiLinkingRule(
-           String text,
-           String matchType
-   ) {
-   }
-
-   private static Object getDeserializedEventData(final ExpandedAuditEvent event) {
-      try {
-          if (Objects.requireNonNull(event.eventType()) == AuditEventType.LINKING_EVENT) {
-              return deserializeEventData(event.eventData(), LinkingAuditDetails.class);
-          }
-          return null;
-      } catch (JsonProcessingException e) {
-         LOGGER.error("Failed to deserialize event data", e);
-      }
-      return null;
-   }
-   private static <T> T deserializeEventData(final String eventData, final Class<T> valueType) throws JsonProcessingException {
-      return OBJECT_MAPPER.readValue(eventData, valueType);
-   }
-
-
-   private static ApiLinkingRule toApiModel(final LinkingAuditDetails linkingAuditDetails) {
-      if (linkingAuditDetails == null) {
-          return null;
-      }
-      return new ApiLinkingRule(
-              String.format("Matched with score %s", linkingAuditDetails.score()),
-              linkingAuditDetails.linkingRule().name()
-      );
-   }
 }

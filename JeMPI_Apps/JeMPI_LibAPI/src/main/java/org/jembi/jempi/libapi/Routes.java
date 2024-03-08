@@ -103,7 +103,7 @@ public final class Routes {
                        uid -> onComplete(Ask.getGoldenRecordAuditTrail(actorSystem, backEnd, uid),
                                          result -> result.isSuccess()
                                                ? complete(StatusCodes.OK,
-                                                          ApiModels.ApiAuditTrail.fromAuditTrail(result.get().auditTrail()),
+                                                         result.get().auditTrail(),
                                                           JSON_MARSHALLER)
                                                : complete(ApiModels.getHttpErrorResponse(StatusCodes.IM_A_TEAPOT))));
    }
@@ -115,7 +115,7 @@ public final class Routes {
                        uid -> onComplete(Ask.getInteractionAuditTrail(actorSystem, backEnd, uid),
                                          result -> result.isSuccess()
                                                ? complete(StatusCodes.OK,
-                                                          ApiModels.ApiAuditTrail.fromAuditTrail(result.get().auditTrail()),
+                                                            result.get().auditTrail(),
                                                           JSON_MARSHALLER)
                                                : complete(ApiModels.getHttpErrorResponse(StatusCodes.IM_A_TEAPOT))));
    }
